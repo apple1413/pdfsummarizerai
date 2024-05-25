@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="description" content="PDF summarizer AI,Chat PDF">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>PDF Summarizer AI</title>
+   <link rel="shortcut icon" href="./favicon.ico" />
+   <link rel="canonical" href="https://seo.box/demo.html"/>
+   <script src="./tailwind.3.4.1.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+		  .loading-spinner {
+		      position: fixed;
+		      top: 50%;
+		      left: 50%;
+		      transform: translate(-50%, -50%);
+		      z-index: 9999;
+		      display: none;
+		  }
+		  
+		  .loading-spinner::before {
+		      content: '';
+		      box-sizing: border-box;
+		      position: absolute;
+		      top: 0;
+		      left: 0;
+		      width: 50px;
+		      height: 50px;
+		      border: 5px solid #ccc;
+		      border-top-color: #333;
+		      border-radius: 50%;
+		      animation: spin 1s linear infinite;
+		  }
+		  
+		  @keyframes spin {
+		      to {
+		          transform: rotate(360deg);
+		      }
+		  }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          
+        }
+        .chat-container {
+            padding: 20px;
+			max-width: 2400px;
+            overflow-y: auto;
+            max-height: 600px; /* Adjusted height */
+		   display: none; /* 初始隐藏 */
+        }
+        .chat-bubble {
+            display: flex;
+            align-items: flex-start;
+            background-color: #e6f2ff;
+            border-radius: 16px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            max-width: 100%;
+        }
+        .user-bubble {
+            background-color: #d4eaff;
+            align-self: flex-end;
+        }
+        .bot-bubble {
+            background-color: #e6f2ff;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .user-avatar {
+            margin-left: auto;
+        }
+        .user-message {
+            color: #333;
+			font-size: 19px; /* 调整字体大小 */
+			font-weight: bold; /* 设置字体粗细 */
+        }
+        .bot-message {
+            color: #333;
+            font-size: 19px; /* 调整字体大小 */
+            font-weight: bold; /* 设置字体粗细 */
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: #f4f4f4;
+            border-top: 1px solid #ddd;
+        }
+        .input-box {
+            flex: 1;
+            padding: 8px;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+        }
+        .send-button {
+            background-color: #276ef1;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .send-button:hover {
+            background-color: #1e56e0;
+        }
+		 .modal {
+		            display: none;
+		            position: fixed;
+		            z-index: 9999;
+		            left: 0;
+		            top: 0;
+		            width: 100%;
+		            height: 100%;
+		            overflow: auto;
+		            background-color: rgba(0,0,0,0.4);
+		        }
+		        .modal-content {
+		            background-color: #fefefe;
+		            margin: 15% auto;
+		            padding: 20px;
+		            border: 1px solid #888;
+		            width: 80%;
+		            border-radius: 8px;
+		            text-align: center;
+		        }
+		        .close {
+		            color: #aaa;
+		            float: right;
+		            font-size: 28px;
+		            font-weight: bold;
+		        }
+		        .close:hover,
+		        .close:focus {
+		            color: black;
+		            text-decoration: none;
+		            cursor: pointer;
+		        }
+    </style>
+</head>
+<body>
+    <section>
+      <!-- CTA Container -->
+      <div class="mx-auto w-full max-w-7xl px-5 py-16 md:px-2 md:py-6 lg:py-8">
+        <!-- CTA Content -->
+        <div class="flex w-full flex-col items-center bg-[#f2f2f7] px-6 py-16 text-center md:py-24 lg:py-32">
+          <!-- CTA Title -->
+          <div class="mb-8 flex-col">
+            <h1 class="mb-4 text-3xl font-bold md:text-5xl">PDF Summarizer AI</h1>
+            <p class="mx-auto max-w-lg text-[#647084]">Using AI technology, PDF Summarizer AI helps users quickly summarize PDF documents. Upload your document, and within seconds, receive a concise summary, saving you time.</p>
+          </div>
+          <!-- CTA Button -->
+          <a href="#" id="uploadButton" class="mb-4 flex flex-row items-center bg-[#276ef1] px-8 py-4 font-semibold text-white transition [box-shadow:rgb(171,_196,245)-8px_8px] hover:[box-shadow:rgb(171,_196,_245)_0px_0px]">
+            <p class="mr-6 font-bold">Upload PDF</p>
+          </a>
+        </div>
+      </div>
+    </section>
+    <div class="container" style="max-height: 1800px;">
+        <div class="chat-container"  style="max-width: 2700px;max-height: 1800px;" id="chatContainer">
+        </div>
+        <div class="input-container">
+            <input type="text" class="input-box" placeholder="Chat with your PDF...">
+            <button class="send-button">Send</button>
+        </div>
+    </div>
+	<div class="loading-spinner" id="loadingSpinner"></div>
+
+
+		<!-- Section CTA -->
+		<section class="bg-black">
+		  <!-- CTA Container -->
+		  <div class="mx-auto w-full max-w-7xl px-5 text-white md:px-10">
+		    <div class="mx-auto w-full max-w-3xl py-16 text-center md:py-24">
+		      <!-- CTA Title -->
+		      <div class="mb-6 flex-col md:mb-10 lg:mb-12">
+		        <h2 class="mb-4 text-3xl font-bold md:text-5xl">Chat with your PDF</h2>
+		        <div class="mx-auto max-w-xl">
+		          <p>It not only supports PDF, but also supports Word, Excel, TXT, and even PPT, etc</p>
+		        </div>
+		      </div>
+		      <!-- CTA Email -->
+		      
+		    </div>
+		  </div>
+		</section>
+    <script>
+		var arcId=''
+		var conSend=false
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            var fileInput = document.createElement('input');
+            fileInput.type = 'file';
+          
+            fileInput.addEventListener('change', function() {
+		    	showLoading();
+                var file = this.files[0];
+                var formData = new FormData();
+                formData.append('pdfFile', file);
+				document.getElementById('chatContainer').style.display = 'block'; // 显示聊天框
+                fetch('https://www.freetoolsplus.cn/pdf/uploadPdf', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+				hideLoading();
+				var responseObject = JSON.parse(data);
+				  arcId=responseObject.id
+				  sendFirstMessage("What was it about?")
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+            fileInput.click();
+        });
+		
+		document.addEventListener('DOMContentLoaded', function() {
+		    var sendButton = document.querySelector('.send-button');
+		    var inputBox = document.querySelector('.input-box');
+		    var chatContainer = document.querySelector('.chat-container');
+			
+			 function sendMessage() {
+				  if (arcId==''){
+				   alert('Please upload PDF first!')
+				   return;
+				  }
+				  if (conSend){
+					  alert('Please wait for the output to be completed!')
+					  return;
+				  }
+				  var message = inputBox.value.trim();
+				if (message !== '') {
+					var userBubble = document.createElement('div');
+					userBubble.classList.add('chat-bubble', 'user-bubble');
+					userBubble.innerHTML = `
+						<img src="./img/you.png" alt="User Avatar" class="avatar user-avatar">
+						<p class="user-message">${message}</p>
+					`;
+					chatContainer.appendChild(userBubble);
+					inputBox.value = '';
+					sendMessageToBackend(message);
+				}
+			}
+		    inputBox.addEventListener('keypress', function(event) {
+		        if (event.key === 'Enter') {
+		            sendMessage();
+		        }
+		    });
+		    sendButton.addEventListener('click', function() {
+			if (arcId==''){
+			
+				alert('Please upload PDF first!')
+				return;
+		    }
+			if (conSend){
+				  alert('Please wait for the output to be completed!')
+				  return;
+			}
+			// 获取输入框的值
+			var message = inputBox.value.trim();
+			if (message !== '') {
+				// 创建用户消息气泡
+				var userBubble = document.createElement('div');
+				userBubble.classList.add('chat-bubble', 'user-bubble');
+				userBubble.innerHTML = `
+					<img src="./img/you.png" alt="User Avatar" class="avatar user-avatar">
+					<p class="user-message">${message}</p>
+				`;
+				chatContainer.appendChild(userBubble);
+				// 清空输入框
+				inputBox.value = '';
+				// 发送消息到后端接口
+				sendMessageToBackend(message);
+			}
+		});
+		});   
+		function sendMessageToBackend(message) {
+		    // 显示等待特效
+		    showLoading();
+			sendStreamMsg(message)
+		    // 发送消息到后端接口的逻辑
+		    // fetch('http://localhost:8087/pdf/sendMsg', {
+		    //     method: 'POST',
+		    //     headers: {
+		    //         'Content-Type': 'application/json'
+		    //     },
+		    //     body: JSON.stringify({ id:arcId, message:message})
+		    // })
+		    // .then(response => response.text())
+		    // .then(data => {
+		    //     // 隐藏等待特效
+		    //     hideLoading();
+		    //     // 创建机器人消息气泡
+		    //     var botBubble = document.createElement('div');
+		    //     botBubble.classList.add('chat-bubble', 'bot-bubble');
+		    //     botBubble.innerHTML = `
+		    //         <img src="./img/ai.png" alt="Bot Avatar" class="avatar">
+		    //         <p class="bot-message">${data}</p>
+		    //     `;
+		    //     chatContainer.appendChild(botBubble);
+		    //     // 将聊天框滚动到底部
+		    //     chatContainer.scrollTop = chatContainer.scrollHeight;
+		    // })
+		    // .catch(error => {
+		    //     // 隐藏等待特效
+		    //     hideLoading();
+		    //     console.error('Error:', error);
+		    // });
+			 chatContainer.scrollTop = chatContainer.scrollHeight;
+		}
+		function sendFirstMessage(message) {	
+				
+		       if (message !== '') {
+		           var userBubble = document.createElement('div');
+		           userBubble.classList.add('chat-bubble', 'user-bubble');
+		           userBubble.innerHTML = `
+		               <img src="./img/you.png" alt="User Avatar" class="avatar user-avatar">
+		               <p class="user-message">${message}</p> `;
+		            chatContainer.appendChild(userBubble);
+					sendStreamMsg(message)
+		          // sendMessageToBackend(message);
+		       }
+		   }   
+		 function showLoading() {
+			document.getElementById('loadingSpinner').style.display = 'block';
+		 }
+		  function hideLoading() {
+		     document.getElementById('loadingSpinner').style.display = 'none';
+		  }
+		  const sendStreamMsg = async (requestData) => {
+		      try {
+		  		if (arcId==''){
+		  		 alert('Please upload PDF first')
+		  		 return;
+		  		}
+		          const response = await fetch('https://www.freetoolsplus.cn/pdf/sendMsg', {
+		              method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({"id":arcId,"message":requestData})
+	
+		          });
+		          const reader = response.body.getReader();
+		          const decoder = new TextDecoder();
+		          let partialText = '';
+		          const chatContainer = document.querySelector('.chat-container');
+		          const newBubble = document.createElement('div');
+		          newBubble.classList.add('chat-bubble', 'bot-bubble');
+		          const avatarImg = document.createElement('img');
+		          avatarImg.src = './img/ai.png';
+		          avatarImg.alt = 'User Avatar';
+		          avatarImg.classList.add('avatar', 'bot-avatar');
+		          newBubble.appendChild(avatarImg);
+		          const messageElement = document.createElement('p');
+		          messageElement.classList.add('bot-message');
+		          newBubble.appendChild(messageElement);
+		          chatContainer.appendChild(newBubble);
+				  hideLoading()
+				  conSend=true;
+				  while (conSend) {
+					  const { done, value } = await reader.read();
+					  if (done) {
+						  break;
+					  }
+					  partialText += decoder.decode(value, { stream: true });
+					  console.log(partialText)
+					  // 更新聊天气泡中的消息内容
+					  messageElement.textContent = partialText;
+					 chatContainer.scrollTop = chatContainer.scrollHeight;
+				  }
+				  conSend=false
+		      } catch (error) {
+		  		  hideLoading()
+		          console.error('Error:', error);
+		      }
+		  };
+    </script>
+	
+	<div style="display: none;">
+		<!-- Google tag (gtag.js)-->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-GZ166H7MKF"></script>
+		<script>
+		  window.dataLayer = window.dataLayer || [];
+		  function gtag(){dataLayer.push(arguments);}
+		  gtag('js', new Date());
+		
+		  gtag('config', 'G-GZ166H7MKF');
+		</script>
+	</div>
+</body>
+</html>

@@ -1,0 +1,2 @@
+# pdfsummarizerai
+pdf
